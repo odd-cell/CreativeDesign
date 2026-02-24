@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Creative Design Learning Goals</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="shell">
+        <div class="brand">
+          <span class="brand-mark">CD</span>
+          <div>
+            <h1>Creative Design Learning Path</h1>
+            <p>Accountability hub for your creative career.</p>
+          </div>
+        </div>
+        <nav class="nav">
+          <button class="nav-link" data-tab="overview">Overview</button>
+          <button class="nav-link" data-tab="curriculum">Curriculum</button>
+          <button class="nav-link" data-tab="skills">Skills</button>
+          <button class="nav-link" data-tab="checkins">Check-ins</button>
+          <button id="auth-trigger" class="button ghost small nav-auth-button">
+            Sign in / Sign up
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section
+        id="overview"
+        class="section hero tab-section"
+        data-tab-panel="overview"
+      >
+        <div class="shell hero-grid">
+          <div>
+            <h2>Design a career, not just a portfolio.</h2>
+            <p class="hero-lead">
+              This path starts with job-ready certifications, then expands into
+              storytelling and game design, and finally sharpens technical craft for
+              your own IP and platforms.
+            </p>
+            <ul class="hero-highlights">
+              <li><strong>Phase 1:</strong> Job-ready certifications (analytics, UX, cloud)</li>
+              <li><strong>Phase 2:</strong> Storytelling &amp; game design toolkit</li>
+              <li><strong>Phase 3:</strong> Advanced game dev technique</li>
+            </ul>
+            <div class="hero-actions">
+              <button class="button primary" data-scroll-target="#curriculum">
+                View learning path
+              </button>
+              <button class="button ghost" data-scroll-target="#checkins">
+                Log today’s progress
+              </button>
+            </div>
+          </div>
+          <aside class="hero-card">
+            <h3>Your current streak</h3>
+            <p class="streak-value" id="streak-value">0 days</p>
+            <p class="streak-caption" id="streak-caption">
+              Start logging check-ins to build momentum.
+            </p>
+            <div class="streak-meta">
+              <div>
+                <span class="stat-label">Last check-in</span>
+                <span class="stat-value" id="last-checkin">—</span>
+              </div>
+              <div>
+                <span class="stat-label">Total sessions</span>
+                <span class="stat-value" id="total-sessions">0</span>
+              </div>
+              <div>
+                <span class="stat-label">Account</span>
+                <span class="stat-value" id="current-user-name">Me</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section
+        id="curriculum"
+        class="section tab-section"
+        data-tab-panel="curriculum"
+      >
+        <div class="shell">
+          <header class="section-header">
+            <h2>Curriculum roadmap</h2>
+            <p>
+              Work through the phases in order. Mark each certification complete as you
+              finish it and watch your progress bar grow.
+            </p>
+          </header>
+
+          <ol class="phase-list">
+            <li class="phase">
+              <div class="phase-header">
+                <h3>Phase 1 · Job-ready foundations</h3>
+                <p>Become employable fast while building a base for UX and systems work.</p>
+              </div>
+              <ul class="course-list" data-phase="1">
+                <li class="course-card" data-course-id="google-data-analytics">
+                  <div class="course-head">
+                    <h4>Google Data Analytics Professional Certificate</h4>
+                    <span class="badge">Coursera</span>
+                  </div>
+                  <p>
+                    Build a strong base in data analysis to unlock entry-level roles and
+                    support UX and product decisions.
+                  </p>
+                  <div class="course-meta">
+                    <span>Focus: data, dashboards, data storytelling</span>
+                  </div>
+                  <div class="course-actions">
+                    <a
+                      href="https://www.coursera.org/professional-certificates/google-data-analytics"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="button ghost small"
+                    >
+                      Open course
+                    </a>
+                    <label class="checkbox-pill">
+                      <input type="checkbox" class="course-checkbox" />
+                      <span>Mark complete</span>
+                    </label>
+                  </div>
+                </li>
+
+                <li class="course-card" data-course-id="google-ux-design">
+                  <div class="course-head">
+                    <h4>Google UX Design Professional Certificate</h4>
+                    <span class="badge">Coursera</span>
+                  </div>
+                  <p>
+                    Learn research, interaction design, and Figma workflows that bridge
+                    analytics with user-centered design.
+                  </p>
+                  <div class="course-meta">
+                    <span>Focus: research, wireframes, prototypes, usability</span>
+                  </div>
+                  <div class="course-actions">
+                    <a
+                      href="https://www.coursera.org/professional-certificates/google-ux-design"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="button ghost small"
+                    >
+                      Open course
+                    </a>
+                    <label class="checkbox-pill">
+                      <input type="checkbox" class="course-checkbox" />
+                      <span>Mark complete</span>
+                    </label>
+                  </div>
+                </li>
+
+                <li class="course-card" data-course-id="google-cloud-development">
+                  <div class="course-head">
+                    <h4>Google Cloud Development Certificate</h4>
+                    <span class="badge">Coursera</span>
+                  </div>
+                  <p>
+                    Understand cloud-native foundations so your projects can scale and
+                    integrate with modern platforms.
+                  </p>
+                  <div class="course-meta">
+                    <span>
+                      Focus: cloud services, deployment, automation · Cloud Architect learning path
+                    </span>
+                  </div>
+                  <div class="course-actions">
+                    <a
+                      href="https://www.coursera.org/professional-certificates/google-cloud-developer"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="button ghost small"
+                    >
+                      Open course
+                    </a>
+                    <a
+                      href="https://www.skills.google/paths/12?catalog_rank=%7B%22rank%22%3A16%2C%22num_filters%22%3A1%2C%22has_search%22%3Atrue%7D&search_id=73790535"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="button subtle small"
+                    >
+                      Architect path
+                    </a>
+                    <label class="checkbox-pill">
+                      <input type="checkbox" class="course-checkbox" />
+                      <span>Mark complete</span>
+                    </label>
+                  </div>
+                </li>
+              </ul>
+            </li>
+
+            <li class="phase">
+              <div class="phase-header">
+                <h3>Phase 2 · Storytelling &amp; game design toolkit</h3>
+                <p>Expand your toolkit into narrative, visual storytelling, and core game design.</p>
+              </div>
+              <ul class="course-list" data-phase="2">
+                <li class="course-card" data-course-id="cu-visual-storytelling">
+                  <div class="course-head">
+                    <h4>The Art of Visual Storytelling</h4>
+                    <span class="badge">CU Boulder · Coursera</span>
+                  </div>
+                  <p>
+                    Learn to compose visuals that communicate emotion, clarity, and intent.
+                  </p>
+                  <div class="course-meta">
+                    <span>Focus: composition, visual language, pacing</span>
+                  </div>
+                  <div class="course-actions">
+                    <a
+                      href="https://www.coursera.org/specializations/the-art-of-visual-storytelling"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="button ghost small"
+                    >
+                      Open course
+                    </a>
+                    <label class="checkbox-pill">
+                      <input type="checkbox" class="course-checkbox" />
+                      <span>Mark complete</span>
+                    </label>
+                  </div>
+                </li>
+
+                <li class="course-card" data-course-id="calarts-story-narrative">
+                  <div class="course-head">
+                    <h4>Story &amp; Narrative Development for Video Games</h4>
+                    <span class="badge">CalArts · Coursera</span>
+                  </div>
+                  <p>
+                    Build narrative structures, characters, and arcs tailored to interactive media.
+                  </p>
+                  <div class="course-meta">
+                    <span>Focus: narrative design, characters, branching</span>
+                  </div>
+                  <div class="course-actions">
+                    <a
+                      href="https://www.coursera.org/learn/video-game-story"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="button ghost small"
+                    >
+                      Open course
+                    </a>
+                    <label class="checkbox-pill">
+                      <input type="checkbox" class="course-checkbox" />
+                      <span>Mark complete</span>
+                    </label>
+                  </div>
+                </li>
+
+                <li class="course-card" data-course-id="calarts-game-design">
+                  <div class="course-head">
+                    <h4>Game Design: Art &amp; Concepts</h4>
+                    <span class="badge">CalArts · Coursera</span>
+                  </div>
+                  <p>
+                    Understand mechanics, dynamics, aesthetics, and how game systems create
+                    player experiences.
+                  </p>
+                  <div class="course-meta">
+                    <span>Focus: systems thinking, mechanics, playtesting</span>
+                  </div>
+                  <div class="course-actions">
+                    <a
+                      href="https://www.coursera.org/specializations/game-design"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="button ghost small"
+                    >
+                      Open course
+                    </a>
+                    <label class="checkbox-pill">
+                      <input type="checkbox" class="course-checkbox" />
+                      <span>Mark complete</span>
+                    </label>
+                  </div>
+                </li>
+              </ul>
+            </li>
+
+            <li class="phase">
+              <div class="phase-header">
+                <h3>Phase 3 · Technical craft &amp; execution</h3>
+                <p>Focus on concrete skills for shipping games and interactive experiences.</p>
+              </div>
+              <ul class="course-list" data-phase="3">
+                <li class="course-card" data-course-id="calarts-character-design">
+                  <div class="course-head">
+                    <h4>Character Design for Video Games</h4>
+                    <span class="badge">CalArts · Coursera</span>
+                  </div>
+                  <p>
+                    Design appealing, functional characters that support your game’s mechanics
+                    and story.
+                  </p>
+                  <div class="course-meta">
+                    <span>Focus: silhouettes, readability, style systems</span>
+                  </div>
+                  <div class="course-actions">
+                    <a
+                      href="https://www.coursera.org/learn/game-character-design"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="button ghost small"
+                    >
+                      Open course
+                    </a>
+                    <label class="checkbox-pill">
+                      <input type="checkbox" class="course-checkbox" />
+                      <span>Mark complete</span>
+                    </label>
+                  </div>
+                </li>
+
+                <li class="course-card" data-course-id="calarts-world-design">
+                  <div class="course-head">
+                    <h4>World Design for Video Games</h4>
+                    <span class="badge">CalArts · Coursera</span>
+                  </div>
+                  <p>
+                    Create coherent worlds that align narrative, gameplay, and visual tone.
+                  </p>
+                  <div class="course-meta">
+                    <span>Focus: level flow, environments, lore</span>
+                  </div>
+                  <div class="course-actions">
+                    <a
+                      href="https://www.coursera.org/learn/video-game-world"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="button ghost small"
+                    >
+                      Open course
+                    </a>
+                    <label class="checkbox-pill">
+                      <input type="checkbox" class="course-checkbox" />
+                      <span>Mark complete</span>
+                    </label>
+                  </div>
+                </li>
+
+                <li class="course-card" data-course-id="packt-pixel-platformer">
+                  <div class="course-head">
+                    <h4>Build a Pixel Platformer in Godot</h4>
+                    <span class="badge">Packt</span>
+                  </div>
+                  <p>
+                    Ship a complete 2D platformer while learning Godot’s workflow and scripting.
+                  </p>
+                  <div class="course-meta">
+                    <span>Focus: 2D gameplay, pixel art, implementation</span>
+                  </div>
+                  <div class="course-actions">
+                    <a
+                      href="https://www.coursera.org/learn/packt-build-a-complete-pixel-platformer-in-godot-4-lny1w"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="button ghost small"
+                    >
+                      Open course
+                    </a>
+                    <label class="checkbox-pill">
+                      <input type="checkbox" class="course-checkbox" />
+                      <span>Mark complete</span>
+                    </label>
+                  </div>
+                </li>
+
+                <li class="course-card" data-course-id="packt-3d-godot">
+                  <div class="course-head">
+                    <h4>Intro to 3D Game Development in Godot</h4>
+                    <span class="badge">Packt</span>
+                  </div>
+                  <p>
+                    Learn the fundamentals of 3D scenes, lighting, and gameplay in Godot.
+                  </p>
+                  <div class="course-meta">
+                    <span>Focus: 3D workflows, cameras, interaction</span>
+                  </div>
+                  <div class="course-actions">
+                    <a
+                      href="https://www.coursera.org/learn/packt-intro-to-3d-game-development-masterclass-in-godot-msjjn"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="button ghost small"
+                    >
+                      Open course
+                    </a>
+                    <label class="checkbox-pill">
+                      <input type="checkbox" class="course-checkbox" />
+                      <span>Mark complete</span>
+                    </label>
+                  </div>
+                </li>
+              </ul>
+            </li>
+          </ol>
+
+          <div class="overall-progress">
+            <div class="overall-header">
+              <h3>Overall curriculum progress</h3>
+              <span id="overall-percent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-bar-fill" id="overall-progress-fill"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="skills"
+        class="section section-alt tab-section"
+        data-tab-panel="skills"
+      >
+        <div class="shell">
+          <header class="section-header">
+            <h2>Skill stack</h2>
+            <p>Track the core skills that support this path and note where you’re strongest.</p>
+          </header>
+          <div class="skills-grid">
+            <div class="skill-pill" data-skill="figma">Figma</div>
+            <div class="skill-pill" data-skill="programming">Programming</div>
+            <div class="skill-pill" data-skill="layout">Layout</div>
+            <div class="skill-pill" data-skill="dataviz">Data visualization</div>
+            <div class="skill-pill" data-skill="visual-storytelling">Visual storytelling</div>
+            <div class="skill-pill" data-skill="content-creation">Content creation</div>
+            <div class="skill-pill" data-skill="game-design">Game design</div>
+            <div class="skill-pill" data-skill="marketing">Marketing</div>
+          </div>
+          <p class="skills-note">
+            Click a skill to mark it as a current focus area. You can change this as your
+            goals evolve.
+          </p>
+        </div>
+      </section>
+
+      <section
+        id="checkins"
+        class="section tab-section"
+        data-tab-panel="checkins"
+      >
+        <div class="shell checkin-layout">
+          <div>
+            <header class="section-header">
+              <h2>Daily check-ins</h2>
+              <p>
+                Use this space to log what you worked on and keep yourself accountable.
+                Entries are saved locally in your browser.
+              </p>
+            </header>
+            <form id="checkin-form" class="checkin-form">
+              <div class="field-group">
+                <label for="checkin-date">Date</label>
+                <input type="date" id="checkin-date" required />
+              </div>
+              <div class="field-group">
+                <label for="checkin-focus">What did you focus on?</label>
+                <select id="checkin-focus" required>
+                  <option value="">Select an area</option>
+                  <option value="phase1">Phase 1 · Foundations</option>
+                  <option value="phase2">Phase 2 · Storytelling &amp; game design</option>
+                  <option value="phase3">Phase 3 · Technical craft</option>
+                  <option value="skills">Skill practice</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="checkin-notes">Notes</label>
+                <textarea
+                  id="checkin-notes"
+                  rows="3"
+                  placeholder="What did you work on? Any wins, blockers, or insights?"
+                  required
+                ></textarea>
+              </div>
+              <button type="submit" class="button primary wide">Save check-in</button>
+            </form>
+          </div>
+
+          <aside class="checkin-sidebar">
+            <h3>Recent check-ins</h3>
+            <ul id="checkin-list" class="checkin-list"></ul>
+            <button id="clear-checkins" class="button subtle">Clear all check-ins</button>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <div id="auth-backdrop" class="modal-backdrop hidden" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <button type="button" id="auth-close" class="modal-close" aria-label="Close dialog">
+          ×
+        </button>
+        <header class="modal-header">
+          <h2 id="auth-title">Welcome back</h2>
+          <p id="auth-subtitle">Sign in to sync your progress on this device.</p>
+        </header>
+        <div class="modal-tabs">
+          <button
+            type="button"
+            class="modal-tab active"
+            data-auth-mode="signin"
+            id="auth-tab-signin"
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            class="modal-tab"
+            data-auth-mode="signup"
+            id="auth-tab-signup"
+          >
+            Sign up
+          </button>
+        </div>
+        <form id="auth-form" class="auth-form">
+          <div class="field-group">
+            <label for="auth-email">Email</label>
+            <input type="email" id="auth-email" autocomplete="email" required />
+          </div>
+          <div class="field-group" id="auth-name-group" hidden>
+            <label for="auth-name">Display name</label>
+            <input
+              type="text"
+              id="auth-name"
+              maxlength="40"
+              autocomplete="name"
+              placeholder="e.g. Remy"
+            />
+          </div>
+          <div class="field-group">
+            <label for="auth-password">Password</label>
+            <input type="password" id="auth-password" autocomplete="current-password" required />
+          </div>
+          <div class="field-group" id="auth-password-confirm-group" hidden>
+            <label for="auth-password-confirm">Confirm password</label>
+            <input type="password" id="auth-password-confirm" autocomplete="new-password" />
+          </div>
+          <p id="auth-error" class="auth-error" aria-live="polite"></p>
+          <button type="submit" class="button primary wide" id="auth-submit">
+            Continue
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <a
+          class="button primary footer-cta"
+          href="https://fluxer.gg/WbeyG4EL"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Join our community
+        </a>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
