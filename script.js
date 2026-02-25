@@ -39,6 +39,7 @@ function ready(fn) {
 ready(() => {
   initAuth((user) => {
     initTabs();
+    initMobileNav();
     initCourses();
     initSkills();
     initCheckins();
@@ -346,7 +347,45 @@ function initTabs() {
       const name = tab.dataset.tab;
       if (!name) return;
       activate(name);
+      const dropdown = document.getElementById("nav-dropdown");
+      if (dropdown?.classList.contains("is-open") && tab.classList.contains("nav-link-dropdown")) {
+        closeMobileNav();
+      }
     });
+  });
+}
+
+function initMobileNav() {
+  const hamburger = document.getElementById("hamburger-btn");
+  const dropdown = document.getElementById("nav-dropdown");
+  if (!hamburger || !dropdown) return;
+
+  function closeMobileNav() {
+    dropdown.classList.remove("is-open");
+    hamburger.setAttribute("aria-expanded", "false");
+    hamburger.setAttribute("aria-label", "Open menu");
+    dropdown.setAttribute("aria-hidden", "true");
+  }
+
+  function openMobileNav() {
+    dropdown.classList.add("is-open");
+    hamburger.setAttribute("aria-expanded", "true");
+    hamburger.setAttribute("aria-label", "Close menu");
+    dropdown.setAttribute("aria-hidden", "false");
+  }
+
+  hamburger.addEventListener("click", () => {
+    if (dropdown.classList.contains("is-open")) {
+      closeMobileNav();
+    } else {
+      openMobileNav();
+    }
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!dropdown.classList.contains("is-open")) return;
+    if (dropdown.contains(e.target) || hamburger.contains(e.target)) return;
+    closeMobileNav();
   });
 }
 

@@ -14,7 +14,7 @@
   </head>
   <body>
     <header class="site-header">
-      <div class="shell">
+      <div class="shell header-inner">
         <div class="brand">
           <span class="brand-mark">CD</span>
           <div>
@@ -22,14 +22,27 @@
             <p>Accountability hub for your creative career.</p>
           </div>
         </div>
-        <nav class="nav">
-          <button class="nav-link" data-tab="overview">Overview</button>
-          <button class="nav-link" data-tab="curriculum">Curriculum</button>
-          <button class="nav-link" data-tab="skills">Skills</button>
-          <button class="nav-link" data-tab="checkins">Check-ins</button>
+        <div class="nav-header-actions">
+          <nav class="nav nav-tabs">
+            <button class="nav-link" data-tab="overview">Overview</button>
+            <button class="nav-link" data-tab="curriculum">Curriculum</button>
+            <button class="nav-link" data-tab="skills">Skills</button>
+            <button class="nav-link" data-tab="checkins">Check-ins</button>
+          </nav>
           <button id="auth-trigger" class="button ghost small nav-auth-button">
             Sign in / Sign up
           </button>
+          <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Open menu" aria-expanded="false">
+            <span class="hamburger-icon"></span>
+          </button>
+        </div>
+      </div>
+      <div class="nav-dropdown" id="nav-dropdown" aria-hidden="true">
+        <nav class="nav-dropdown-inner">
+          <button type="button" class="nav-link nav-link-dropdown" data-tab="overview">Overview</button>
+          <button type="button" class="nav-link nav-link-dropdown" data-tab="curriculum">Curriculum</button>
+          <button type="button" class="nav-link nav-link-dropdown" data-tab="skills">Skills</button>
+          <button type="button" class="nav-link nav-link-dropdown" data-tab="checkins">Check-ins</button>
         </nav>
       </div>
     </header>
