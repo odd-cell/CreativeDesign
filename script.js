@@ -287,7 +287,7 @@ function initAuth(onAuthReady) {
         (a) => a.email && a.email.toLowerCase() === email && a.password === password
       );
       if (!match) {
-        errorEl.textContent = "No account found. Use Sign up on this device or set up Supabase to sync.";
+        errorEl.textContent = "No account on this device. Sign up here to create a local account, or use the site where Supabase is configured to sign in with your existing account.";
         return;
       }
       localStorage.setItem(CURRENT_ACCOUNT_KEY, match.email);
