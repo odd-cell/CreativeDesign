@@ -71,13 +71,6 @@ function initAuth(onAuthReady) {
   const errorEl = document.getElementById("auth-error");
   const submitBtn = document.getElementById("auth-submit");
   const displayNameEl = document.getElementById("current-user-name");
-  const deviceNote = document.getElementById("auth-device-note");
-
-  if (deviceNote) {
-    deviceNote.textContent = supabase
-      ? "Your account and progress sync across devices."
-      : "Accounts are stored on this device only. Add Supabase (see README) to sync across devices.";
-  }
 
   function setUserState(user, profileName) {
     window.currentUserId = user?.id || null;
@@ -157,7 +150,6 @@ function initAuth(onAuthReady) {
       })
       .catch(() => {
         supabase = null;
-        if (deviceNote) deviceNote.textContent = "Supabase connection failed. Using local storage. Check config.js and BACKEND.md.";
         const accounts = safeParse(localStorage.getItem(ACCOUNT_LIST_KEY)) || [];
         const currentEmail = localStorage.getItem(CURRENT_ACCOUNT_KEY) || "";
         const currentAccount = accounts.find((a) => a.email && a.email.toLowerCase() === currentEmail?.toLowerCase()) || null;

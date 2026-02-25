@@ -613,13 +613,6 @@ textarea {
   display: grid;
 }
 
-.auth-device-note {
-  margin: 0.5rem 0 0.4rem;
-  font-size: 0.75rem;
-  color: var(--muted);
-  line-height: 1.35;
-}
-
 .auth-error {
   min-height: 1rem;
   margin: 0.2rem 0 0.6rem;
