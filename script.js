@@ -339,6 +339,7 @@ function initTabs() {
       tab.classList.toggle("active", tab.dataset.tab === name);
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
+    window.dispatchEvent(new CustomEvent("tabactivated", { detail: { name } }));
   };
   const initial = tabs[0].dataset.tab;
   activate(initial || "overview");
@@ -347,10 +348,6 @@ function initTabs() {
       const name = tab.dataset.tab;
       if (!name) return;
       activate(name);
-      const dropdown = document.getElementById("nav-dropdown");
-      if (dropdown?.classList.contains("is-open") && tab.classList.contains("nav-link-dropdown")) {
-        closeMobileNav();
-      }
     });
   });
 }
@@ -386,6 +383,10 @@ function initMobileNav() {
     if (!dropdown.classList.contains("is-open")) return;
     if (dropdown.contains(e.target) || hamburger.contains(e.target)) return;
     closeMobileNav();
+  });
+
+  window.addEventListener("tabactivated", () => {
+    if (dropdown.classList.contains("is-open")) closeMobileNav();
   });
 }
 
