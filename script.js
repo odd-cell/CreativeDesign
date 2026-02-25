@@ -3,13 +3,23 @@ const STORAGE_KEYS = {
   focusSkill: "cdlg_focus_skill_v1",
   checkins: "cdlg_checkins_v1",
 };
-
 const ACCOUNT_LIST_KEY = "cdlg_accounts_v1";
 const CURRENT_ACCOUNT_KEY = "cdlg_current_account_v1";
 
+let supabase = null;
+const cfg = typeof window !== "undefined" && window.CDLG_SUPABASE;
+if (cfg && cfg.url && cfg.anonKey && !cfg.url.includes("YOUR_PROJECT")) {
+  supabase = window.supabase?.createClient(cfg.url, cfg.anonKey) || null;
+}
+
+function getUserId() {
+  if (supabase && window.currentUserId) return window.currentUserId;
+  const email = window.currentAccountEmail || "";
+  return email || "guest";
+}
+
 function storageKey(base) {
-  const userId = window.currentAccountEmail || "guest";
-  return `${base}__user_${userId}`;
+  return `${base}__user_${getUserId()}`;
 }
 
 function ready(fn) {
@@ -21,59 +31,23 @@ function ready(fn) {
 }
 
 ready(() => {
-  initAuth();
-  initTabs();
-  initCourses();
-  initSkills();
-  initCheckins();
+  initAuth((user) => {
+    initTabs();
+    initCourses();
+    initSkills();
+    initCheckins();
+  });
 });
-
-function initSmoothScroll() {
-  document.querySelectorAll("[data-scroll-target]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const target = btn.getAttribute("data-scroll-target");
-      const el = target && document.querySelector(target);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  });
-}
-
-function initTabs() {
-  const tabs = Array.from(document.querySelectorAll("[data-tab]"));
-  const panels = Array.from(document.querySelectorAll("[data-tab-panel]"));
-  if (!tabs.length || !panels.length) return;
-
-  const activate = (name) => {
-    panels.forEach((panel) => {
-      panel.classList.toggle("active", panel.dataset.tabPanel === name);
-    });
-    tabs.forEach((tab) => {
-      tab.classList.toggle("active", tab.dataset.tab === name);
-    });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const initial = tabs[0].dataset.tab;
-  activate(initial || "overview");
-
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const name = tab.dataset.tab;
-      if (!name) return;
-      activate(name);
-    });
-  });
-}
 
 function safeParse(json) {
   try {
-    return JSON.parse(json);
+    return json ? JSON.parse(json) : null;
   } catch {
     return null;
   }
 }
 
-function initAuth() {
+function initAuth(onAuthReady) {
   const trigger = document.getElementById("auth-trigger");
   const backdrop = document.getElementById("auth-backdrop");
   const closeBtn = document.getElementById("auth-close");
@@ -91,35 +65,49 @@ function initAuth() {
   const errorEl = document.getElementById("auth-error");
   const submitBtn = document.getElementById("auth-submit");
   const displayNameEl = document.getElementById("current-user-name");
+  const deviceNote = document.getElementById("auth-device-note");
 
-  const accounts = safeParse(localStorage.getItem(ACCOUNT_LIST_KEY)) || [];
-  const currentEmail = localStorage.getItem(CURRENT_ACCOUNT_KEY) || "";
-  const currentAccount =
-    accounts.find((a) => a.email && a.email.toLowerCase() === currentEmail?.toLowerCase()) ||
-    null;
-
-  window.currentAccountEmail = currentAccount?.email || "";
-  if (displayNameEl) {
-    displayNameEl.textContent = currentAccount?.name || "Guest";
+  if (deviceNote) {
+    deviceNote.textContent = supabase
+      ? "Your account and progress sync across devices."
+      : "Accounts are stored on this device only. Add Supabase (see README) to sync across devices.";
   }
 
-  if (!trigger || !backdrop || !closeBtn || !form) return;
+  function setUserState(user, profileName) {
+    window.currentUserId = user?.id || null;
+    window.currentAccountEmail = user?.email || "";
+    if (displayNameEl) {
+      displayNameEl.textContent = profileName || user?.email || "Guest";
+    }
+    if (trigger) {
+      trigger.textContent = user ? "Sign out" : "Sign in / Sign up";
+    }
+  }
 
-  let mode = "signin";
-
-  const applyMode = () => {
+  function applyMode() {
     const isSignin = mode === "signin";
     tabSignin?.classList.toggle("active", isSignin);
     tabSignup?.classList.toggle("active", !isSignin);
     nameGroup.hidden = isSignin;
     pwConfirmGroup.hidden = isSignin;
+    if (pwConfirmInput) pwConfirmInput.removeAttribute("required");
+    if (nameInput) nameInput.removeAttribute("required");
+    if (isSignin) {
+      passwordInput.setAttribute("autocomplete", "current-password");
+      submitBtn.textContent = "Sign in";
+    } else {
+      passwordInput.setAttribute("autocomplete", "new-password");
+      pwConfirmInput?.setAttribute("required", "");
+      submitBtn.textContent = "Sign up";
+    }
     title.textContent = isSignin ? "Welcome back" : "Create your account";
     subtitle.textContent = isSignin
-      ? "Sign in to keep your progress tied to your email on this device."
+      ? "Enter your email and password to continue."
       : "Use email and a password to keep your progress organized.";
-    submitBtn.textContent = isSignin ? "Sign in" : "Sign up";
     errorEl.textContent = "";
-  };
+  }
+
+  let mode = "signin";
 
   const openModal = (startMode) => {
     if (startMode) mode = startMode;
@@ -136,12 +124,79 @@ function initAuth() {
     errorEl.textContent = "";
   };
 
+  if (supabase) {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user ?? null;
+      window.currentUserId = user?.id ?? null;
+      window.currentAccountEmail = user?.email ?? "";
+      if (user && displayNameEl) {
+        supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", user.id)
+          .single()
+          .then(({ data }) => {
+            displayNameEl.textContent = data?.display_name || user.email || "Guest";
+          })
+          .catch(() => {
+            displayNameEl.textContent = user.email || "Guest";
+          });
+      } else if (displayNameEl) {
+        displayNameEl.textContent = "Guest";
+      }
+      if (trigger) trigger.textContent = user ? "Sign out" : "Sign in / Sign up";
+      onAuthReady(user);
+    });
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null;
+      setUserState(user, null);
+      if (user && displayNameEl) {
+        supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", user.id)
+          .single()
+          .then(({ data }) => {
+            if (displayNameEl) displayNameEl.textContent = data?.display_name || user.email || "Guest";
+          })
+          .catch(() => {});
+      }
+      onAuthReady(user);
+    });
+  } else {
+    const accounts = safeParse(localStorage.getItem(ACCOUNT_LIST_KEY)) || [];
+    const currentEmail = localStorage.getItem(CURRENT_ACCOUNT_KEY) || "";
+    const currentAccount = accounts.find(
+      (a) => a.email && a.email.toLowerCase() === currentEmail?.toLowerCase()
+    ) || null;
+    window.currentAccountEmail = currentAccount?.email || "";
+    window.currentUserId = null;
+    if (displayNameEl) displayNameEl.textContent = currentAccount?.name || "Guest";
+    if (trigger) trigger.textContent = currentAccount ? "Sign out" : "Sign in / Sign up";
+    onAuthReady(currentAccount ? { email: currentAccount.email } : null);
+  }
+
+  if (!trigger || !backdrop || !closeBtn || !form) return;
+
   trigger.addEventListener("click", () => {
-    if (window.currentAccountEmail) {
-      localStorage.removeItem(CURRENT_ACCOUNT_KEY);
-      window.currentAccountEmail = "";
-      if (displayNameEl) displayNameEl.textContent = "Guest";
-      trigger.textContent = "Sign in / Sign up";
+    if (window.currentAccountEmail || window.currentUserId) {
+      if (supabase) {
+        supabase.auth.signOut().then(() => {
+          window.currentUserId = null;
+          window.currentAccountEmail = "";
+          if (displayNameEl) displayNameEl.textContent = "Guest";
+          trigger.textContent = "Sign in / Sign up";
+          onAuthReady(null);
+        });
+      } else {
+        localStorage.removeItem(CURRENT_ACCOUNT_KEY);
+        window.currentAccountEmail = "";
+        window.currentUserId = null;
+        if (displayNameEl) displayNameEl.textContent = "Guest";
+        trigger.textContent = "Sign in / Sign up";
+        onAuthReady(null);
+      }
       return;
     }
     openModal("signin");
@@ -161,11 +216,7 @@ function initAuth() {
     applyMode();
   });
 
-  if (currentAccount) {
-    trigger.textContent = "Sign out";
-  }
-
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = emailInput.value.trim().toLowerCase();
     const password = passwordInput.value;
@@ -176,14 +227,54 @@ function initAuth() {
       return;
     }
 
-    const stored = safeParse(localStorage.getItem(ACCOUNT_LIST_KEY)) || [];
+    if (supabase) {
+      try {
+        if (mode === "signin") {
+          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) {
+            errorEl.textContent = error.message || "Sign in failed.";
+            return;
+          }
+          const uid = data.user?.id;
+          if (uid && displayNameEl) {
+            const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", uid).single();
+            displayNameEl.textContent = profile?.display_name || data.user?.email || "Guest";
+          }
+          closeModal();
+          onAuthReady(data.user);
+        } else {
+          if (!pwConfirmInput.value || pwConfirmInput.value !== password) {
+            errorEl.textContent = "Passwords do not match.";
+            return;
+          }
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: { data: { display_name: name } },
+          });
+          if (error) {
+            errorEl.textContent = error.message || "Sign up failed.";
+            return;
+          }
+          if (data.user && displayNameEl) {
+            displayNameEl.textContent = name;
+          }
+          closeModal();
+          onAuthReady(data.user);
+        }
+      } catch (err) {
+        errorEl.textContent = err.message || "Something went wrong.";
+      }
+      return;
+    }
 
+    const stored = safeParse(localStorage.getItem(ACCOUNT_LIST_KEY)) || [];
     if (mode === "signin") {
       const match = stored.find(
         (a) => a.email && a.email.toLowerCase() === email && a.password === password
       );
       if (!match) {
-        errorEl.textContent = "Could not find that account or password is incorrect.";
+        errorEl.textContent = "No account found. Use Sign up on this device or set up Supabase to sync.";
         return;
       }
       localStorage.setItem(CURRENT_ACCOUNT_KEY, match.email);
@@ -191,14 +282,24 @@ function initAuth() {
       if (displayNameEl) displayNameEl.textContent = match.name || match.email;
       trigger.textContent = "Sign out";
       closeModal();
+      onAuthReady({ email: match.email });
     } else {
-      if (!pwConfirmInput.value || pwConfirmInput.value !== password) {
-        errorEl.textContent = "Passwords do not match.";
+      const existing = stored.find((a) => a.email && a.email.toLowerCase() === email);
+      if (existing && existing.password === password) {
+        localStorage.setItem(CURRENT_ACCOUNT_KEY, existing.email);
+        window.currentAccountEmail = existing.email;
+        if (displayNameEl) displayNameEl.textContent = existing.name || existing.email;
+        trigger.textContent = "Sign out";
+        closeModal();
+        onAuthReady({ email: existing.email });
         return;
       }
-      const exists = stored.find((a) => a.email && a.email.toLowerCase() === email);
-      if (exists) {
-        errorEl.textContent = "An account with that email already exists. Try signing in.";
+      if (existing) {
+        errorEl.textContent = "An account with that email already exists. Sign in with the correct password.";
+        return;
+      }
+      if (!pwConfirmInput.value || pwConfirmInput.value !== password) {
+        errorEl.textContent = "Passwords do not match.";
         return;
       }
       const nextAccounts = [...stored, { email, password, name, createdAt: Date.now() }];
@@ -208,41 +309,96 @@ function initAuth() {
       if (displayNameEl) displayNameEl.textContent = name;
       trigger.textContent = "Sign out";
       closeModal();
+      onAuthReady({ email });
     }
+  });
+}
+
+function initTabs() {
+  const tabs = Array.from(document.querySelectorAll("[data-tab]"));
+  const panels = Array.from(document.querySelectorAll("[data-tab-panel]"));
+  if (!tabs.length || !panels.length) return;
+  const activate = (name) => {
+    panels.forEach((panel) => {
+      panel.classList.toggle("active", panel.dataset.tabPanel === name);
+    });
+    tabs.forEach((tab) => {
+      tab.classList.toggle("active", tab.dataset.tab === name);
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const initial = tabs[0].dataset.tab;
+  activate(initial || "overview");
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const name = tab.dataset.tab;
+      if (!name) return;
+      activate(name);
+    });
   });
 }
 
 function initCourses() {
   const boxes = Array.from(document.querySelectorAll(".course-card .course-checkbox"));
   if (!boxes.length) return;
+  const uid = window.currentUserId;
+
+  if (supabase && uid) {
+    supabase
+      .from("course_progress")
+      .select("course_id, completed")
+      .eq("user_id", uid)
+      .then(({ data }) => {
+        const map = {};
+        (data || []).forEach((row) => {
+          map[row.course_id] = row.completed;
+        });
+        boxes.forEach((box) => {
+          const card = box.closest(".course-card");
+          const id = card?.dataset.courseId;
+          if (!id || !card) return;
+          const checked = !!map[id];
+          box.checked = checked;
+          card.classList.toggle("course-complete", checked);
+        });
+        updateOverallProgress();
+      })
+      .catch(() => updateOverallProgress());
+  } else {
+    const saved = safeParse(localStorage.getItem(storageKey(STORAGE_KEYS.courses))) || {};
+    boxes.forEach((box) => {
+      const card = box.closest(".course-card");
+      const id = card?.dataset.courseId;
+      if (!id || !card) return;
+      const checked = !!saved[id];
+      box.checked = checked;
+      card.classList.toggle("course-complete", checked);
+    });
+    updateOverallProgress();
+  }
 
   boxes.forEach((box) => {
     const card = box.closest(".course-card");
     const id = card?.dataset.courseId;
     if (!id) return;
-
-    box.addEventListener("change", () => {
-      const key = storageKey(STORAGE_KEYS.courses);
-      const current = safeParse(localStorage.getItem(key)) || {};
-      const state = { ...current, [id]: box.checked };
-      if (!box.checked) delete state[id];
-      localStorage.setItem(key, JSON.stringify(state));
-      card.classList.toggle("course-complete", box.checked);
+    box.addEventListener("change", async () => {
+      const completed = box.checked;
+      card.classList.toggle("course-complete", completed);
+      if (supabase && uid) {
+        await supabase.from("course_progress").upsert(
+          { user_id: uid, course_id: id, completed, updated_at: new Date().toISOString() },
+          { onConflict: "user_id,course_id" }
+        );
+      } else {
+        const key = storageKey(STORAGE_KEYS.courses);
+        const current = safeParse(localStorage.getItem(key)) || {};
+        if (completed) current[id] = true;
+        else delete current[id];
+        localStorage.setItem(key, JSON.stringify(current));
+      }
       updateOverallProgress();
     });
   });
-
-  const saved = safeParse(localStorage.getItem(storageKey(STORAGE_KEYS.courses))) || {};
-  boxes.forEach((box) => {
-    const card = box.closest(".course-card");
-    const id = card?.dataset.courseId;
-    if (!id || !card) return;
-    const checked = !!saved[id];
-    box.checked = checked;
-    card.classList.toggle("course-complete", checked);
-  });
-
-  updateOverallProgress();
 }
 
 function updateOverallProgress() {
@@ -251,7 +407,6 @@ function updateOverallProgress() {
   if (!total) return;
   const done = boxes.filter((b) => b.checked).length;
   const percent = Math.round((done / total) * 100);
-
   const label = document.getElementById("overall-percent");
   const bar = document.getElementById("overall-progress-fill");
   if (label) label.textContent = `${percent}%`;
@@ -261,25 +416,54 @@ function updateOverallProgress() {
 function initSkills() {
   const pills = Array.from(document.querySelectorAll(".skill-pill"));
   if (!pills.length) return;
+  const uid = window.currentUserId;
 
-  const saved = localStorage.getItem(storageKey(STORAGE_KEYS.focusSkill));
-  if (saved) {
-    pills.forEach((pill) => {
-      if (pill.dataset.skill === saved) pill.classList.add("active");
-    });
+  if (supabase && uid) {
+    supabase
+      .from("skill_focus")
+      .select("skill")
+      .eq("user_id", uid)
+      .single()
+      .then(({ data }) => {
+        const skill = data?.skill;
+        pills.forEach((pill) => {
+          pill.classList.toggle("active", pill.dataset.skill === skill);
+        });
+      })
+      .catch(() => {});
+  } else {
+    const saved = localStorage.getItem(storageKey(STORAGE_KEYS.focusSkill));
+    if (saved) {
+      pills.forEach((pill) => {
+        if (pill.dataset.skill === saved) pill.classList.add("active");
+      });
+    }
   }
 
   pills.forEach((pill) => {
-    pill.addEventListener("click", () => {
+    pill.addEventListener("click", async () => {
       const id = pill.dataset.skill;
       const isActive = pill.classList.contains("active");
       pills.forEach((p) => p.classList.remove("active"));
-
       if (!isActive) {
         pill.classList.add("active");
-        localStorage.setItem(storageKey(STORAGE_KEYS.focusSkill), id);
+        if (supabase && uid) {
+          await supabase.from("skill_focus").upsert(
+            { user_id: uid, skill: id, updated_at: new Date().toISOString() },
+            { onConflict: "user_id" }
+          );
+        } else {
+          localStorage.setItem(storageKey(STORAGE_KEYS.focusSkill), id);
+        }
       } else {
-        localStorage.removeItem(storageKey(STORAGE_KEYS.focusSkill));
+        if (supabase && uid) {
+          await supabase.from("skill_focus").upsert(
+            { user_id: uid, skill: null, updated_at: new Date().toISOString() },
+            { onConflict: "user_id" }
+          );
+        } else {
+          localStorage.removeItem(storageKey(STORAGE_KEYS.focusSkill));
+        }
       }
     });
   });
@@ -290,44 +474,90 @@ function initCheckins() {
   const list = document.getElementById("checkin-list");
   const clearBtn = document.getElementById("clear-checkins");
   if (!form || !list || !clearBtn) return;
-
   const dateInput = document.getElementById("checkin-date");
   if (dateInput && !dateInput.value) {
-    const today = new Date();
-    dateInput.value = today.toISOString().slice(0, 10);
+    dateInput.value = new Date().toISOString().slice(0, 10);
+  }
+  const uid = window.currentUserId;
+
+  function renderAndStreak(checkins) {
+    renderCheckins(checkins, list);
+    updateStreakSummary(checkins);
   }
 
-  let checkins = safeParse(localStorage.getItem(storageKey(STORAGE_KEYS.checkins))) || [];
-  if (!Array.isArray(checkins)) checkins = [];
+  if (supabase && uid) {
+    supabase
+      .from("checkins")
+      .select("date, focus, notes, created_at")
+      .eq("user_id", uid)
+      .order("date", { ascending: false })
+      .then(({ data }) => {
+        const arr = (data || []).map((r) => ({
+          date: r.date,
+          focus: r.focus,
+          notes: r.notes,
+          createdAt: new Date(r.created_at).getTime(),
+        }));
+        renderAndStreak(arr);
+      })
+      .catch(() => renderAndStreak([]));
+  } else {
+    let checkins = safeParse(localStorage.getItem(storageKey(STORAGE_KEYS.checkins))) || [];
+    if (!Array.isArray(checkins)) checkins = [];
+    renderAndStreak(checkins);
+  }
 
-  renderCheckins(checkins, list);
-  updateStreakSummary(checkins);
-
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const date = dateInput?.value;
     const focus = document.getElementById("checkin-focus")?.value;
     const notesField = document.getElementById("checkin-notes");
-    const notes = notesField?.value.trim();
-
+    const notes = notesField?.value?.trim();
     if (!date || !focus || !notes) return;
 
-    const entry = { date, focus, notes, createdAt: Date.now() };
-    checkins = [...checkins, entry].sort((a, b) => (a.date < b.date ? 1 : -1));
-    localStorage.setItem(storageKey(STORAGE_KEYS.checkins), JSON.stringify(checkins));
-
-    renderCheckins(checkins, list);
-    updateStreakSummary(checkins);
+    if (supabase && uid) {
+      const { error } = await supabase.from("checkins").insert({
+        user_id: uid,
+        date,
+        focus,
+        notes,
+      });
+      if (error) return;
+      const { data } = await supabase
+        .from("checkins")
+        .select("date, focus, notes, created_at")
+        .eq("user_id", uid)
+        .order("date", { ascending: false });
+      const arr = (data || []).map((r) => ({
+        date: r.date,
+        focus: r.focus,
+        notes: r.notes,
+        createdAt: new Date(r.created_at).getTime(),
+      }));
+      renderAndStreak(arr);
+    } else {
+      const entry = { date, focus, notes, createdAt: Date.now() };
+      let checkins = safeParse(localStorage.getItem(storageKey(STORAGE_KEYS.checkins))) || [];
+      if (!Array.isArray(checkins)) checkins = [];
+      checkins = [...checkins, entry].sort((a, b) => (a.date < b.date ? 1 : -1));
+      localStorage.setItem(storageKey(STORAGE_KEYS.checkins), JSON.stringify(checkins));
+      renderAndStreak(checkins);
+    }
     if (notesField) notesField.value = "";
   });
 
-  clearBtn.addEventListener("click", () => {
-    if (!checkins.length) return;
-    if (!confirm("Clear all check-ins from this browser?")) return;
-    checkins = [];
-    localStorage.removeItem(storageKey(STORAGE_KEYS.checkins));
-    renderCheckins(checkins, list);
-    updateStreakSummary(checkins);
+  clearBtn.addEventListener("click", async () => {
+    if (supabase && uid) {
+      if (!confirm("Clear all check-ins? This cannot be undone.")) return;
+      const { error } = await supabase.from("checkins").delete().eq("user_id", uid);
+      if (!error) renderAndStreak([]);
+    } else {
+      const checkins = safeParse(localStorage.getItem(storageKey(STORAGE_KEYS.checkins))) || [];
+      if (!Array.isArray(checkins) || !checkins.length) return;
+      if (!confirm("Clear all check-ins?")) return;
+      localStorage.removeItem(storageKey(STORAGE_KEYS.checkins));
+      renderAndStreak([]);
+    }
   });
 }
 
@@ -341,29 +571,22 @@ function renderCheckins(checkins, listEl) {
     listEl.appendChild(li);
     return;
   }
-
   checkins.slice(0, 6).forEach((entry) => {
     const li = document.createElement("li");
     li.className = "checkin-item";
-
     const header = document.createElement("div");
     header.className = "checkin-item-header";
-
     const dateSpan = document.createElement("span");
     dateSpan.className = "checkin-date";
     dateSpan.textContent = formatDate(entry.date);
-
     const tag = document.createElement("span");
     tag.className = "checkin-tag";
     tag.textContent = labelForFocus(entry.focus);
-
     header.appendChild(dateSpan);
     header.appendChild(tag);
-
     const notes = document.createElement("p");
     notes.className = "checkin-notes";
     notes.textContent = entry.notes;
-
     li.appendChild(header);
     li.appendChild(notes);
     listEl.appendChild(li);
@@ -371,20 +594,14 @@ function renderCheckins(checkins, listEl) {
 }
 
 function labelForFocus(value) {
-  switch (value) {
-    case "phase1":
-      return "Phase 1 · Foundations";
-    case "phase2":
-      return "Phase 2 · Storytelling & game design";
-    case "phase3":
-      return "Phase 3 · Technical craft";
-    case "skills":
-      return "Skill practice";
-    case "other":
-      return "Other";
-    default:
-      return "";
-  }
+  const map = {
+    phase1: "Phase 1 · Foundations",
+    phase2: "Phase 2 · Storytelling & game design",
+    phase3: "Phase 3 · Technical craft",
+    skills: "Skill practice",
+    other: "Other",
+  };
+  return map[value] || "";
 }
 
 function updateStreakSummary(checkins) {
@@ -393,7 +610,6 @@ function updateStreakSummary(checkins) {
   const lastEl = document.getElementById("last-checkin");
   const totalEl = document.getElementById("total-sessions");
   if (!streakEl || !captionEl || !lastEl || !totalEl) return;
-
   if (!checkins.length) {
     streakEl.textContent = "0 days";
     captionEl.textContent = "Start logging check-ins to build momentum.";
@@ -401,25 +617,20 @@ function updateStreakSummary(checkins) {
     totalEl.textContent = "0";
     return;
   }
-
   const uniqueDates = Array.from(new Set(checkins.map((c) => c.date))).sort();
   const streak = calculateStreak(uniqueDates);
   streakEl.textContent = `${streak} day${streak === 1 ? "" : "s"}`;
   captionEl.textContent =
-    streak >= 3 ? "Nice streak—keep showing up." : "You’re building a new habit.";
-
-  const latestDate = uniqueDates[uniqueDates.length - 1];
-  lastEl.textContent = formatDate(latestDate);
+    streak >= 3 ? "Nice streak—keep showing up." : "You're building a new habit.";
+  lastEl.textContent = formatDate(uniqueDates[uniqueDates.length - 1]);
   totalEl.textContent = String(checkins.length);
 }
 
 function calculateStreak(sortedDatesAsc) {
   if (!sortedDatesAsc.length) return 0;
   const todayStr = new Date().toISOString().slice(0, 10);
-
   let streak = 0;
   let current = todayStr;
-
   for (let i = sortedDatesAsc.length - 1; i >= 0; i -= 1) {
     const d = sortedDatesAsc[i];
     if (d === current) {
@@ -428,11 +639,8 @@ function calculateStreak(sortedDatesAsc) {
     } else if (d === shiftDate(current, -1)) {
       streak += 1;
       current = shiftDate(current, -1);
-    } else if (d < current) {
-      break;
-    }
+    } else if (d < current) break;
   }
-
   return streak;
 }
 
@@ -447,4 +655,3 @@ function formatDate(dateStr) {
   if (Number.isNaN(d.getTime())) return dateStr;
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
-

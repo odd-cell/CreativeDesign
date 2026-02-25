@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Creative Design Learning Goals</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -552,9 +552,12 @@
             <label for="auth-password-confirm">Confirm password</label>
             <input type="password" id="auth-password-confirm" autocomplete="new-password" />
           </div>
+          <p id="auth-device-note" class="auth-device-note">
+            Accounts are stored on this device only. On another device, use Sign up with the same email and password to use your account there.
+          </p>
           <p id="auth-error" class="auth-error" aria-live="polite"></p>
           <button type="submit" class="button primary wide" id="auth-submit">
-            Continue
+            Sign in
           </button>
         </form>
       </div>
@@ -573,6 +576,8 @@
       </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+    <script src="config.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
