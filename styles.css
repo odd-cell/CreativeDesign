@@ -605,6 +605,14 @@ textarea {
   margin-top: 1rem;
 }
 
+.auth-signup-only {
+  display: none;
+}
+
+.auth-form[data-auth-mode="signup"] .auth-signup-only {
+  display: grid;
+}
+
 .auth-device-note {
   margin: 0.5rem 0 0.4rem;
   font-size: 0.75rem;

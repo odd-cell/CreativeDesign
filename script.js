@@ -9,7 +9,13 @@ const CURRENT_ACCOUNT_KEY = "cdlg_current_account_v1";
 let supabase = null;
 const cfg = typeof window !== "undefined" && window.CDLG_SUPABASE;
 if (cfg && cfg.url && cfg.anonKey && !cfg.url.includes("YOUR_PROJECT")) {
-  supabase = window.supabase?.createClient(cfg.url, cfg.anonKey) || null;
+  try {
+    if (typeof window.supabase?.createClient === "function") {
+      supabase = window.supabase.createClient(cfg.url, cfg.anonKey);
+    }
+  } catch (_) {
+    supabase = null;
+  }
 }
 
 function getUserId() {
@@ -88,23 +94,24 @@ function initAuth(onAuthReady) {
     const isSignin = mode === "signin";
     tabSignin?.classList.toggle("active", isSignin);
     tabSignup?.classList.toggle("active", !isSignin);
-    nameGroup.hidden = isSignin;
-    pwConfirmGroup.hidden = isSignin;
+    if (form) form.setAttribute("data-auth-mode", isSignin ? "signin" : "signup");
+    if (nameGroup) nameGroup.hidden = isSignin;
+    if (pwConfirmGroup) pwConfirmGroup.hidden = isSignin;
     if (pwConfirmInput) pwConfirmInput.removeAttribute("required");
     if (nameInput) nameInput.removeAttribute("required");
     if (isSignin) {
-      passwordInput.setAttribute("autocomplete", "current-password");
-      submitBtn.textContent = "Sign in";
+      if (passwordInput) passwordInput.setAttribute("autocomplete", "current-password");
+      if (submitBtn) submitBtn.textContent = "Sign in";
     } else {
-      passwordInput.setAttribute("autocomplete", "new-password");
-      pwConfirmInput?.setAttribute("required", "");
-      submitBtn.textContent = "Sign up";
+      if (passwordInput) passwordInput.setAttribute("autocomplete", "new-password");
+      if (pwConfirmInput) pwConfirmInput.setAttribute("required", "");
+      if (submitBtn) submitBtn.textContent = "Sign up";
     }
-    title.textContent = isSignin ? "Welcome back" : "Create your account";
-    subtitle.textContent = isSignin
+    if (title) title.textContent = isSignin ? "Welcome back" : "Create your account";
+    if (subtitle) subtitle.textContent = isSignin
       ? "Enter your email and password to continue."
       : "Use email and a password to keep your progress organized.";
-    errorEl.textContent = "";
+    if (errorEl) errorEl.textContent = "";
   }
 
   let mode = "signin";
@@ -125,28 +132,41 @@ function initAuth(onAuthReady) {
   };
 
   if (supabase) {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const user = session?.user ?? null;
-      window.currentUserId = user?.id ?? null;
-      window.currentAccountEmail = user?.email ?? "";
-      if (user && displayNameEl) {
-        supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("id", user.id)
-          .single()
-          .then(({ data }) => {
-            displayNameEl.textContent = data?.display_name || user.email || "Guest";
-          })
-          .catch(() => {
-            displayNameEl.textContent = user.email || "Guest";
-          });
-      } else if (displayNameEl) {
-        displayNameEl.textContent = "Guest";
-      }
-      if (trigger) trigger.textContent = user ? "Sign out" : "Sign in / Sign up";
-      onAuthReady(user);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        const user = session?.user ?? null;
+        window.currentUserId = user?.id ?? null;
+        window.currentAccountEmail = user?.email ?? "";
+        if (user && displayNameEl) {
+          supabase
+            .from("profiles")
+            .select("display_name")
+            .eq("id", user.id)
+            .single()
+            .then(({ data }) => {
+              displayNameEl.textContent = data?.display_name || user.email || "Guest";
+            })
+            .catch(() => {
+              displayNameEl.textContent = user.email || "Guest";
+            });
+        } else if (displayNameEl) {
+          displayNameEl.textContent = "Guest";
+        }
+        if (trigger) trigger.textContent = user ? "Sign out" : "Sign in / Sign up";
+        onAuthReady(user);
+      })
+      .catch(() => {
+        supabase = null;
+        if (deviceNote) deviceNote.textContent = "Supabase connection failed. Using local storage. Check config.js and BACKEND.md.";
+        const accounts = safeParse(localStorage.getItem(ACCOUNT_LIST_KEY)) || [];
+        const currentEmail = localStorage.getItem(CURRENT_ACCOUNT_KEY) || "";
+        const currentAccount = accounts.find((a) => a.email && a.email.toLowerCase() === currentEmail?.toLowerCase()) || null;
+        window.currentAccountEmail = currentAccount?.email || "";
+        window.currentUserId = null;
+        if (displayNameEl) displayNameEl.textContent = currentAccount?.name || "Guest";
+        if (trigger) trigger.textContent = currentAccount ? "Sign out" : "Sign in / Sign up";
+        onAuthReady(currentAccount ? { email: currentAccount.email } : null);
+      });
 
     supabase.auth.onAuthStateChange((_event, session) => {
       const user = session?.user ?? null;
